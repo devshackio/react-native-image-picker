@@ -69,6 +69,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private Uri mCameraCaptureURI;
   private Callback mCallback;
   private Boolean noData = false;
+  private Boolean tmpImage;
+  private String storagePath = "/";
   private Boolean pickVideo = false;
   private int maxWidth = 0;
   private int maxHeight = 0;
@@ -649,11 +651,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             .append(UUID.randomUUID().toString())
             .append(".jpg")
             .toString();
-    File path = mReactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+    File directoryFile;
+    if (tmpImage) {
+      directoryFile = new File(mReactContext.getExternalCacheDir().getAbsolutePath(), this.storagePath);
+    } else {
+      directoryFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath(), this.storagePath);
+    }
 
-    File f = new File(path, filename);
+    File f = new File(directoryFile, filename);
     try {
-      path.mkdirs();
+      directoryFile.mkdirs();
       f.createNewFile();
     } catch (IOException e) {
       e.printStackTrace();
@@ -695,6 +702,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     quality = 100;
     if (options.hasKey("quality")) {
       quality = (int) (options.getDouble("quality") * 100);
+    }
+    tmpImage = true;
+    if (options.hasKey("storageOptions")) {
+      tmpImage = false;
+      ReadableMap storageOptions = options.getMap("storageOptions");
+      if (storageOptions != null && storageOptions.hasKey("path")) {
+        storagePath = storageOptions.getString("path");
+      }
     }
     rotation = 0;
     if (options.hasKey("rotation")) {
