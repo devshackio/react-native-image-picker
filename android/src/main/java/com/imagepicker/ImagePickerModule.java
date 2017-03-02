@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.app.AlertDialog;
@@ -71,6 +72,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private Boolean noData = false;
   private Boolean tmpImage;
   private String storagePath = "/";
+  private String customAuthoritySuffix = null;
   private Boolean pickVideo = false;
   private int maxWidth = 0;
   private int maxHeight = 0;
@@ -222,7 +224,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
       // we create a tmp file to save the result
       File imageFile = createNewFile();
-      mCameraCaptureURI = compatUriFromFile(mReactContext, imageFile);
+      mCameraCaptureURI = compatUriFromFile(mReactContext, imageFile, customAuthoritySuffix);
       cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraCaptureURI);
     }
 
@@ -505,7 +507,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   }
 
   private @NonNull String getRealPathFromURI(@NonNull final Uri uri) {
-    return RealPathUtil.getRealPathFromURI(mReactContext, uri);
+    return RealPathUtil.getRealPathFromURI(mReactContext, uri, customAuthoritySuffix);
   }
 
   /**
@@ -727,6 +729,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (options.hasKey("durationLimit")) {
       videoDurationLimit = options.getInt("durationLimit");
     }
+    if (options.hasKey("authoritySuffix")) {
+      customAuthoritySuffix = options.getString("authoritySuffix");
+    }
   }
 
   public void fileScan(String path) {
@@ -746,7 +751,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   // Some people need this for compilation
   public void onActivityResult(int requestCode, int resultCode, Intent data) { }
 
-  private static Uri compatUriFromFile(@NonNull final Context context, @NonNull final File file) {
+  private static Uri compatUriFromFile(@NonNull final Context context, @NonNull final File file, @Nullable final String customAuthoritySuffix) {
     Uri result = null;
     if (Build.VERSION.SDK_INT < 19)
     {
@@ -755,7 +760,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     else
     {
       final String packageName = context.getApplicationContext().getPackageName();
-      final String authority =  new StringBuilder(packageName).append(".provider").toString();
+      final String authoritySuffix = customAuthoritySuffix != null ? customAuthoritySuffix : "provider";
+      final String authority = packageName + "." + authoritySuffix;
       result = FileProvider.getUriForFile(context, authority, file);
     }
     return result;
