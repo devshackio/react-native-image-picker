@@ -753,7 +753,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
   private static Uri compatUriFromFile(@NonNull final Context context, @NonNull final File file, @Nullable final String customAuthoritySuffix) {
     Uri result = null;
-    if (Build.VERSION.SDK_INT < 19)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
     {
       result = Uri.fromFile(file);
     }
